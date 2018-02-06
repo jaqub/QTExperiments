@@ -5,7 +5,8 @@
 OpenWeather::OpenWeather(QObject *parent, const QString &appid) :
     QObject(parent),
     url(new QUrl()),
-    appid(appid)
+    appid(appid),
+    format(OpenWeather::UnitFormat::Standard)
 {
   qnam = new QNetworkAccessManager(this);
   Q_CHECK_PTR(qnam);
@@ -25,6 +26,10 @@ void OpenWeather::get(const QString &id)
     QUrlQuery urlQuery;
     urlQuery.addQueryItem("appid", appid);
     urlQuery.addQueryItem("id", id);
+    if (format == UnitFormat::Metric)
+      urlQuery.addQueryItem("units", "metric");
+    else if (format == UnitFormat::Imperial)
+      urlQuery.addQueryItem("units", "imperial");
 
     url->setQuery(urlQuery);
 
