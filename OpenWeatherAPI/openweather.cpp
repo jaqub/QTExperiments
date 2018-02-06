@@ -1,3 +1,5 @@
+#include <QJsonDocument>
+#include <QJsonObject>
 #include "openweather.h"
 
 OpenWeather::OpenWeather(QObject *parent, const QString &appid) :
@@ -6,6 +8,7 @@ OpenWeather::OpenWeather(QObject *parent, const QString &appid) :
     appid(appid)
 {
   qnam = new QNetworkAccessManager(this);
+  Q_CHECK_PTR(qnam);
 
   url->setScheme("http");
   url->setHost("api.openweathermap.org");
@@ -28,18 +31,51 @@ void OpenWeather::get(const QString &id)
     qDebug() << "Will send request to: " << url->toString();
 
     reply = qnam->get(QNetworkRequest(*url));
+    Q_CHECK_PTR(reply);
+
     connect(reply, &QNetworkReply::finished, this, &OpenWeather::finished);
 }
 
 void OpenWeather::finished()
 {
-    qDebug() << "Reqest finished got reply" << reply->error();
+    qDebug() << "Reqest finished got reply" << reply->errorString();
     if (reply->error()) {
         delete reply;
         return;
     }
 
-    qDebug() << reply->readAll();
+    QJsonParseError jsonErr;
+    QJsonDocument json = QJsonDocument::fromJson(reply->readAll(), &jsonErr);
+    if (json.isNull()) {
+        qWarning() << "Json validation failed" << jsonErr.errorString();
+
+        delete reply;
+        return;
+    }
+
+    qDebug() << "Validation of response done:" << jsonErr.errorString();
+
+    QJsonObject jObj;
+    jObj = json.object();
+    if (jObj.contains("main")) {
+        qDebug() << "Main found";
+        QJsonObject jMainObj = jObj["main"].toObject();
+
+        //Get temperature
+        if (jMainObj.contains("temp") && jMainObj["temp"].isDouble()) {
+            qDebug() << "Temp: " << jMainObj["temp"].toDouble();
+        }
+
+        //Get pressure
+        if (jMainObj.contains("pressure") && jMainObj["pressure"].isDouble()) {
+            qDebug() << "Pressure: " << jMainObj["pressure"].toDouble();
+        }
+
+        // Get humidity
+        if (jMainObj.contains("humidity") && jMainObj["humidity"].toDouble()) {
+            qDebug() << "Humidity: " << jMainObj["humidity"].toDouble();
+        }
+    }
 
     delete reply;
 }
