@@ -21,6 +21,149 @@ OpenWeather::~OpenWeather()
     delete url;
 }
 
+QJsonParseError::ParseError OpenWeather::parseReply(QNetworkReply &reply, OpenWeather::Weather &weather)
+{
+    QJsonParseError jsonErr;
+    QJsonDocument json = QJsonDocument::fromJson(reply.readAll(), &jsonErr);
+    if (json.isNull()) {
+        qWarning() << "Json validation failed" << jsonErr.errorString();
+        return jsonErr.error;
+    }
+
+    qDebug() << "Validation of response done:" << jsonErr.errorString();
+
+    QJsonObject jObj = json.object();
+    if (jObj.contains("coord") && jObj["coord"].isObject()) {
+      qDebug() << "Coord found";
+      QJsonObject jCoordObj = jObj["coord"].toObject();
+
+      if (jCoordObj.contains("lon") && jCoordObj["lon"].isDouble())
+          weather.coord.lon = jCoordObj["lon"].toDouble();
+
+      if (jCoordObj.contains("lan") && jCoordObj["lan"].isDouble())
+          weather.coord.lat = jCoordObj["lat"].toDouble();
+    }
+
+    if (jObj.contains("visibility") && jObj["visibility"].isDouble()) {
+        qDebug() << "Visibility found";
+        weather.visibility = jObj["visibility"].toDouble();
+    }
+
+    if (jObj.contains("weather") && jObj["weather"].isArray()) {
+        qDebug() << "Weather found";
+
+        weather.weather.isValid = true;
+        QJsonArray jWeatherArray = jObj["weather"].toArray();
+        if (!jWeatherArray.isEmpty()) {
+          for (int i = 0; i < jWeatherArray.size(); i++) {
+
+            QJsonObject jWeatherObj = jWeatherArray.at(i).toObject();
+
+            if (jWeatherObj.contains("id") && jWeatherObj["id"].isDouble())
+                weather.weather.id = jWeatherObj["id"].toInt();
+
+            if (jWeatherObj.contains("main") && jWeatherObj["main"].isString())
+                weather.weather.main = jWeatherObj["main"].toString();
+
+            if (jWeatherObj.contains("description") && jWeatherObj["description"].isString())
+                weather.weather.description = jWeatherObj["description"].toString();
+
+            if (jWeatherObj.contains("icon") && jWeatherObj["icon"].isString())
+                weather.weather.icon = jWeatherObj["icon"].toString();
+          }
+        }
+    } else {
+        weather.weather.isValid = false;
+    }
+
+    if (jObj.contains("main") && jObj["main"].isObject()) {
+        qDebug() << "Main found";
+        QJsonObject jMainObj = jObj["main"].toObject();
+
+        //Get temperature
+        if (jMainObj.contains("temp") && jMainObj["temp"].isDouble())
+          weather.main.temperature = jMainObj["temp"].toDouble();
+
+        //Get pressure
+        if (jMainObj.contains("pressure") && jMainObj["pressure"].isDouble())
+          weather.main.pressure = jMainObj["pressure"].toDouble();
+
+        // Get humidity
+        if (jMainObj.contains("humidity") && jMainObj["humidity"].toDouble())
+          weather.main.himidity = jMainObj["humidity"].toDouble();
+     }
+
+    if (jObj.contains("wind") && jObj["wind"].isObject()) {
+        qDebug() << "Wind found";
+        QJsonObject jWindObj = jObj["wind"].toObject();
+
+        if (jWindObj.contains("speed") && jWindObj["speed"].isDouble())
+            weather.wind.speed = jWindObj["speed"].toDouble();
+
+        if (jWindObj.contains("deg") && jWindObj["deg"].isDouble())
+            weather.wind.deg = jWindObj["deg"].toDouble();
+    }
+
+    if (jObj.contains("clouds") && jObj["clouds"].isObject()) {
+        qDebug() << "Clouds found";
+        QJsonObject jCloudsObj = jObj["clouds"].toObject();
+
+        if (jCloudsObj.contains("all") && jCloudsObj["all"].isDouble())
+            weather.clouds.all = jCloudsObj["all"].toDouble();
+    }
+
+    if (jObj.contains("rain") && jObj["rain"].isObject()) {
+        qDebug() << "Rain found";
+        QJsonObject jRainObj = jObj["rain"].toObject();
+
+        if (jRainObj.contains("3h") && jRainObj["3h"].isDouble())
+            weather.rain.h3 = jRainObj["3h"].toDouble();
+    }
+
+    if (jObj.contains("snow") && jObj["snow"].isObject()) {
+        qDebug() << "snow found";
+        QJsonObject jSnowObj = jObj["snow"].toObject();
+
+        if (jSnowObj.contains("3h") && jSnowObj["3h"].isDouble())
+            weather.snow.h3 = jSnowObj["3h"].toDouble();
+    }
+
+    if (jObj.contains("sys") && jObj["sys"].isObject()) {
+        qDebug() << "Sys found";
+        QJsonObject jSysObj = jObj["sys"].toObject();
+
+        if (jSysObj.contains("type") && jSysObj["type"].isDouble())
+            weather.sys.type = jSysObj["type"].toDouble();
+
+        if (jSysObj.contains("id") && jSysObj["id"].isDouble())
+            weather.sys.id = jSysObj["id"].toDouble();
+
+        if (jSysObj.contains("message") && jSysObj["message"].isDouble())
+            weather.sys.message = jSysObj["message"].toDouble();
+
+        if (jSysObj.contains("country") && jSysObj["country"].isString())
+            weather.sys.country = jSysObj["country"].toString();
+
+        if (jSysObj.contains("sunrise") && jSysObj["sunrise"].isDouble())
+            weather.sys.sunrise = jSysObj["sunrise"].toDouble();
+
+        if (jSysObj.contains("sunset") && jSysObj["sunset"].isDouble())
+            weather.sys.sunset = jSysObj["sunset"].toDouble();
+    }
+
+    if (jObj.contains("id") && jObj["id"].isDouble()) {
+        qDebug() << "Id found";
+        weather.id = jObj["id"].toInt();
+    }
+
+    if (jObj.contains("name") && jObj["name"].isString()) {
+        qDebug() << "Name found";
+        weather.name = jObj["name"].toString();
+    }
+
+    return QJsonParseError::ParseError::NoError;
+}
+
 void OpenWeather::get(const QString &id)
 {
     QUrlQuery urlQuery;
@@ -38,10 +181,10 @@ void OpenWeather::get(const QString &id)
     reply = qnam->get(QNetworkRequest(*url));
     Q_CHECK_PTR(reply);
 
-    connect(reply, &QNetworkReply::finished, this, &OpenWeather::finished);
+    connect(reply, &QNetworkReply::finished, this, &OpenWeather::onResponseSend);
 }
 
-void OpenWeather::finished()
+void OpenWeather::onResponseSend()
 {
     qDebug() << "Reqest finished got reply" << reply->errorString();
     if (reply->error()) {
@@ -49,38 +192,9 @@ void OpenWeather::finished()
         return;
     }
 
-    QJsonParseError jsonErr;
-    QJsonDocument json = QJsonDocument::fromJson(reply->readAll(), &jsonErr);
-    if (json.isNull()) {
-        qWarning() << "Json validation failed" << jsonErr.errorString();
-
-        delete reply;
-        return;
-    }
-
-    qDebug() << "Validation of response done:" << jsonErr.errorString();
-
-    QJsonObject jObj;
-    jObj = json.object();
-    if (jObj.contains("main")) {
-        qDebug() << "Main found";
-        QJsonObject jMainObj = jObj["main"].toObject();
-
-        //Get temperature
-        if (jMainObj.contains("temp") && jMainObj["temp"].isDouble()) {
-            qDebug() << "Temp: " << jMainObj["temp"].toDouble();
-        }
-
-        //Get pressure
-        if (jMainObj.contains("pressure") && jMainObj["pressure"].isDouble()) {
-            qDebug() << "Pressure: " << jMainObj["pressure"].toDouble();
-        }
-
-        // Get humidity
-        if (jMainObj.contains("humidity") && jMainObj["humidity"].toDouble()) {
-            qDebug() << "Humidity: " << jMainObj["humidity"].toDouble();
-        }
-    }
+    Weather weather;
+    if (QJsonParseError::ParseError::NoError == parseReply(*reply, weather))
+        emit finished(weather);
 
     delete reply;
 }
