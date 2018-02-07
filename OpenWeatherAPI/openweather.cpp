@@ -35,6 +35,8 @@ QJsonParseError::ParseError OpenWeather::parseReply(QNetworkReply &reply, OpenWe
     QJsonObject jObj = json.object();
     if (jObj.contains("coord") && jObj["coord"].isObject()) {
       qDebug() << "Coord found";
+
+      weather.coord.isValid = true;
       QJsonObject jCoordObj = jObj["coord"].toObject();
 
       if (jCoordObj.contains("lon") && jCoordObj["lon"].isDouble())
@@ -42,11 +44,8 @@ QJsonParseError::ParseError OpenWeather::parseReply(QNetworkReply &reply, OpenWe
 
       if (jCoordObj.contains("lan") && jCoordObj["lan"].isDouble())
           weather.coord.lat = jCoordObj["lat"].toDouble();
-    }
-
-    if (jObj.contains("visibility") && jObj["visibility"].isDouble()) {
-        qDebug() << "Visibility found";
-        weather.visibility = jObj["visibility"].toDouble();
+    } else {
+        weather.coord.isValid = false;
     }
 
     if (jObj.contains("weather") && jObj["weather"].isArray()) {
@@ -78,6 +77,8 @@ QJsonParseError::ParseError OpenWeather::parseReply(QNetworkReply &reply, OpenWe
 
     if (jObj.contains("main") && jObj["main"].isObject()) {
         qDebug() << "Main found";
+
+        weather.main.isValid = true;
         QJsonObject jMainObj = jObj["main"].toObject();
 
         //Get temperature
@@ -91,10 +92,14 @@ QJsonParseError::ParseError OpenWeather::parseReply(QNetworkReply &reply, OpenWe
         // Get humidity
         if (jMainObj.contains("humidity") && jMainObj["humidity"].toDouble())
           weather.main.himidity = jMainObj["humidity"].toDouble();
-     }
+    } else {
+        weather.main.isValid = false;
+    }
 
     if (jObj.contains("wind") && jObj["wind"].isObject()) {
         qDebug() << "Wind found";
+
+        weather.wind.isValid = true;
         QJsonObject jWindObj = jObj["wind"].toObject();
 
         if (jWindObj.contains("speed") && jWindObj["speed"].isDouble())
@@ -102,34 +107,50 @@ QJsonParseError::ParseError OpenWeather::parseReply(QNetworkReply &reply, OpenWe
 
         if (jWindObj.contains("deg") && jWindObj["deg"].isDouble())
             weather.wind.deg = jWindObj["deg"].toDouble();
+    } else {
+        weather.wind.isValid = false;
     }
 
     if (jObj.contains("clouds") && jObj["clouds"].isObject()) {
         qDebug() << "Clouds found";
+
+        weather.clouds.isValid = true;
         QJsonObject jCloudsObj = jObj["clouds"].toObject();
 
         if (jCloudsObj.contains("all") && jCloudsObj["all"].isDouble())
             weather.clouds.all = jCloudsObj["all"].toDouble();
+    } else {
+        weather.clouds.isValid = false;
     }
 
     if (jObj.contains("rain") && jObj["rain"].isObject()) {
         qDebug() << "Rain found";
+
+        weather.rain.isValid = true;
         QJsonObject jRainObj = jObj["rain"].toObject();
 
         if (jRainObj.contains("3h") && jRainObj["3h"].isDouble())
             weather.rain.h3 = jRainObj["3h"].toDouble();
+    } else {
+        weather.rain.isValid = false;
     }
 
     if (jObj.contains("snow") && jObj["snow"].isObject()) {
         qDebug() << "snow found";
+
+        weather.snow.isValid = true;
         QJsonObject jSnowObj = jObj["snow"].toObject();
 
         if (jSnowObj.contains("3h") && jSnowObj["3h"].isDouble())
             weather.snow.h3 = jSnowObj["3h"].toDouble();
+    } else {
+        weather.snow.isValid = false;
     }
 
     if (jObj.contains("sys") && jObj["sys"].isObject()) {
         qDebug() << "Sys found";
+
+        weather.sys.isValid = true;
         QJsonObject jSysObj = jObj["sys"].toObject();
 
         if (jSysObj.contains("type") && jSysObj["type"].isDouble())
@@ -149,6 +170,13 @@ QJsonParseError::ParseError OpenWeather::parseReply(QNetworkReply &reply, OpenWe
 
         if (jSysObj.contains("sunset") && jSysObj["sunset"].isDouble())
             weather.sys.sunset = jSysObj["sunset"].toDouble();
+    } else {
+        weather.sys.isValid = false;
+    }
+
+    if (jObj.contains("visibility") && jObj["visibility"].isDouble()) {
+        qDebug() << "Visibility found";
+        weather.visibility = jObj["visibility"].toDouble();
     }
 
     if (jObj.contains("id") && jObj["id"].isDouble()) {
@@ -160,6 +188,8 @@ QJsonParseError::ParseError OpenWeather::parseReply(QNetworkReply &reply, OpenWe
         qDebug() << "Name found";
         weather.name = jObj["name"].toString();
     }
+
+    weather.isValid = true;
 
     return QJsonParseError::ParseError::NoError;
 }
