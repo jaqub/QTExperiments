@@ -219,12 +219,68 @@ void OpenWeather::onResponseSend()
     qDebug() << "Reqest finished got reply" << reply->errorString();
     if (reply->error()) {
         delete reply;
+        emit error();
         return;
     }
 
     Weather weather;
-    if (QJsonParseError::ParseError::NoError == parseReply(*reply, weather))
+    if (QJsonParseError::ParseError::NoError == parseReply(*reply, weather)) {
+        qDebug() << weather;
         emit finished(weather);
+    } else {
+        emit error();
+    }
 
     delete reply;
+}
+
+QDebug operator<<(QDebug stream, OpenWeather::Weather &weather)
+{
+    if (weather.isValid == false) {
+        stream << "data invalid";
+        return stream;
+    }
+
+    stream << "Weather for:" << weather.name << "id:" << weather.id << endl;
+
+    if (weather.weather.isValid) {
+        stream << "Main:" << weather.weather.main <<
+                  "Icon:" << weather.weather.icon << endl;
+        stream << "Description:" << weather.weather.description << endl;
+    }
+
+    if (weather.main.isValid)
+        stream << "Temperature:" << weather.main.temperature <<
+                  "Pressure:"    << weather.main.pressure    <<
+                  "Humidity:"    << weather.main.himidity    << endl;
+
+    if (weather.wind.isValid)
+        stream << "Wind speed" << weather.wind.speed <<
+                  "Direction:" << weather.wind.deg   << endl;
+
+    if (weather.clouds.isValid)
+        stream << "Cloudiness: " << weather.clouds.all << "%" << endl;
+
+    if (weather.rain.isValid)
+        stream << "Rain volume for last 3h:" << weather.rain.h3 << endl;
+
+    if (weather.snow.isValid)
+        stream << "Snow volume for last 3h:" << weather.snow.h3 << endl;
+
+    if (weather.sys.isValid) {
+        QDateTime qdt;
+        QTime sunrise;
+        QTime sunset;
+
+        qdt.setSecsSinceEpoch(weather.sys.sunrise);
+        sunrise = qdt.time();
+
+        qdt.setSecsSinceEpoch(weather.sys.sunset);
+        sunset = qdt.time();
+        stream << "Sunrise:" << sunrise.toString("hh:mm:ss") << endl;
+        stream << "Sunset:" << sunset.toString("hh:mm:ss") << endl;
+        stream << "Country:" << weather.sys.country << endl;
+    }
+
+    return stream;
 }

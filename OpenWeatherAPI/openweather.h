@@ -103,4 +103,6 @@ private:
     UnitFormat format;
 };
 
+QDebug operator<<(QDebug stream, OpenWeather::Weather &weather);
+
 #endif // OPENWEATHER_H
