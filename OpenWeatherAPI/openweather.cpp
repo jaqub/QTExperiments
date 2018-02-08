@@ -51,28 +51,30 @@ QJsonParseError::ParseError OpenWeather::parseReply(QNetworkReply &reply, OpenWe
     if (jObj.contains("weather") && jObj["weather"].isArray()) {
         qDebug() << "Weather found";
 
-        weather.weather.isValid = true;
-        QJsonArray jWeatherArray = jObj["weather"].toArray();
-        if (!jWeatherArray.isEmpty()) {
-          for (int i = 0; i < jWeatherArray.size(); i++) {
+      QJsonArray jWeatherArray = jObj["weather"].toArray();
+      if (!jWeatherArray.isEmpty()) {
+        int jArrSize = jWeatherArray.size();
+        weather.weather.reserve(jArrSize);
 
-            QJsonObject jWeatherObj = jWeatherArray.at(i).toObject();
+        for (int i = 0; i < jArrSize; i++) {
+          OpenWeather::Weather::weather_t jWeater;
+          QJsonObject jWeatherObj = jWeatherArray.at(i).toObject();
 
-            if (jWeatherObj.contains("id") && jWeatherObj["id"].isDouble())
-                weather.weather.id = jWeatherObj["id"].toInt();
+          if (jWeatherObj.contains("id") && jWeatherObj["id"].isDouble())
+              jWeater.id = jWeatherObj["id"].toInt();
 
-            if (jWeatherObj.contains("main") && jWeatherObj["main"].isString())
-                weather.weather.main = jWeatherObj["main"].toString();
+          if (jWeatherObj.contains("main") && jWeatherObj["main"].isString())
+              jWeater.main = jWeatherObj["main"].toString();
 
-            if (jWeatherObj.contains("description") && jWeatherObj["description"].isString())
-                weather.weather.description = jWeatherObj["description"].toString();
+          if (jWeatherObj.contains("description") && jWeatherObj["description"].isString())
+              jWeater.description = jWeatherObj["description"].toString();
 
-            if (jWeatherObj.contains("icon") && jWeatherObj["icon"].isString())
-                weather.weather.icon = jWeatherObj["icon"].toString();
-          }
+          if (jWeatherObj.contains("icon") && jWeatherObj["icon"].isString())
+              jWeater.icon = jWeatherObj["icon"].toString();
+
+          weather.weather.append(jWeater);
         }
-    } else {
-        weather.weather.isValid = false;
+      }
     }
 
     if (jObj.contains("main") && jObj["main"].isObject()) {
@@ -243,10 +245,12 @@ QDebug operator<<(QDebug stream, OpenWeather::Weather &weather)
 
     stream << "Weather for:" << weather.name << "id:" << weather.id << endl;
 
-    if (weather.weather.isValid) {
-        stream << "Main:" << weather.weather.main <<
-                  "Icon:" << weather.weather.icon << endl;
-        stream << "Description:" << weather.weather.description << endl;
+    for (int i = 0; i < weather.weather.size(); i++) {
+        OpenWeather::Weather::weather_t w = weather.weather.at(i);
+
+        stream << "Main:" << w.main <<
+                  "Icon:" << w.icon << endl;
+        stream << "Description:" << w.description << endl;
     }
 
     if (weather.main.isValid)

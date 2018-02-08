@@ -2,6 +2,7 @@
 #define OPENWEATHER_H
 
 #include <QObject>
+#include <QVector>
 #include <QtNetwork>
 
 class OpenWeather : public QObject
@@ -17,19 +18,18 @@ public:
     class Weather
     {
     public:
+        struct weather_t {
+            int id;
+            QString main;
+            QString description;
+            QString icon;
+        };
+
         struct {
             double lon;
             double lat;
             bool isValid;
         } coord;
-
-        struct {
-            int id;
-            QString main;
-            QString description;
-            QString icon;
-            bool isValid;
-        } weather;
 
         struct {
             double_t temperature;
@@ -69,6 +69,7 @@ public:
             bool isValid;
         } sys;
 
+        QVector<weather_t> weather;
         double_t visibility;
         int id;
         QString name;
