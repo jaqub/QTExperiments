@@ -4,6 +4,8 @@
 #include <QObject>
 
 class QTcpSocket;
+class QFile;
+class QSocketNotifier;
 
 class DenonCtrl : public QObject
 {
@@ -16,10 +18,13 @@ public:
 protected slots:
     void connected();
     void disconnected();
-    void readyRead();
+    qint64 readFromSock();
+    qint64 readFromStdIn();
 
 private:
+
     QTcpSocket *mSock;
+    QSocketNotifier *mStdInNotifier;
 };
 
 #endif // DENONCTRL_H
