@@ -14,6 +14,7 @@ DenonCtrl::DenonCtrl()
 
     connect(mSock, &QTcpSocket::connected, this ,&DenonCtrl::connected);
     connect(mSock, &QTcpSocket::disconnected, this, &DenonCtrl::disconnected);
+    connect(mSock, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &DenonCtrl::error);
     connect(mSock, &QTcpSocket::readyRead, this, &DenonCtrl::readFromSock);
     mSock->connectToHost("192.168.1.106", 23);
 
@@ -33,6 +34,11 @@ void DenonCtrl::connected()
 void DenonCtrl::disconnected()
 {
     qInfo() << "Disconnected";
+}
+
+void DenonCtrl::error(QAbstractSocket::SocketError aSocketError)
+{
+    qDebug() << "Connection failed:" << aSocketError;
 }
 
 qint64 DenonCtrl::readFromSock()
@@ -55,6 +61,5 @@ qint64 DenonCtrl::readFromStdIn()
     int nBytes = read(STDIN_FILENO, buff, 256);
     buff[nBytes - 1] = 0x0D;
     mSock->write(buff, nBytes);
-    qDebug() << "(STDIN):" << buff;
     return nBytes;
 }

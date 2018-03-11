@@ -2,6 +2,7 @@
 #define DENONCTRL_H
 
 #include <QObject>
+#include <QAbstractSocket>
 
 class QTcpSocket;
 class QFile;
@@ -18,6 +19,7 @@ public:
 protected slots:
     void connected();
     void disconnected();
+    void error(QAbstractSocket::SocketError aSocketError);
     qint64 readFromSock();
     qint64 readFromStdIn();
 
