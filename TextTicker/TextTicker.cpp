@@ -8,9 +8,6 @@
 TextTicker::TextTicker(QWidget *parent)
     : QWidget(parent), offset(0), timerId(0), timerInterval(30)
 {
-    QFont font = this->font();
-    font.setPixelSize(48);
-    setFont(font);
 }
 
 TextTicker::~TextTicker()
