@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.6.0, 2018-04-07T22:02:32. -->
+<!-- Written by QtCreator 4.6.0, 2018-04-08T18:09:55. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -857,7 +857,7 @@
        <value type="QString">/home/jakub/Workspace/rpi/sysroot</value>
       </valuelist>
       <valuelist type="QVariantList" key="ProjectExplorer.RunConfiguration.LastDeployedTimes">
-       <value type="QDateTime">2018-04-07T17:19:19</value>
+       <value type="QDateTime">2018-04-08T11:25:56</value>
       </valuelist>
       <value type="bool" key="RemoteLinux.GenericDirectUploadStep.IgnoreMissingFiles">false</value>
       <value type="bool" key="RemoteLinux.GenericDirectUploadStep.Incremental">true</value>

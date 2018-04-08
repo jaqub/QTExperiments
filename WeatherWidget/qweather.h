@@ -42,16 +42,15 @@ private:
 
     static const int margin = 25;
 
-    int itemsShown;
-
     double minY;
 
     double maxY;
 
     int numYTicks;
 
-
     void drawYGrid(QPainter *painter);
+
+    void drawCurve(QPainter *painter);
 
     double adjustAxis(double &min, double &max, int &numTicks);
 

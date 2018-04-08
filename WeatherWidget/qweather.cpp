@@ -5,11 +5,8 @@
 #include <QRect>
 
 QWeather::QWeather(QWidget *parent)
-    : QWidget(parent), itemsShown(1), minY(-7), maxY(6), numYTicks(1)
+    : QWidget(parent), minY(0), maxY(10), numYTicks(1)
 {
-    double step = adjustAxis(minY, maxY, numYTicks);
-    qDebug() << "minY" << minY << "maxY" << maxY <<
-                "ticks" << numYTicks << "step" << step;
 }
 
 QWeather::~QWeather()
@@ -29,15 +26,21 @@ QSize QWeather::sizeHint() const
 
 void QWeather::append(WeatherItem *item)
 {
-    forecast.append(item);
-    itemsShown = forecast.size();
-    if (itemsShown <= 0)
-        itemsShown = 1;
-    else if (itemsShown > 5)
-        itemsShown = 5;
+    if (forecast.isEmpty()) {
+        minY = item->temp();
+        maxY = minY + 1;
+    } else if (item->temp() > maxY) {
+        maxY = item->temp();
+    } else if (item->temp() < minY) {
+        minY = item->temp();
+    }
 
+    forecast.append(item);
+
+    adjustAxis(minY, maxY, numYTicks);
     update();
 }
+
 void QWeather::drawYGrid(QPainter *painter)
 {
     Q_ASSERT(painter != nullptr);
@@ -56,16 +59,34 @@ void QWeather::drawYGrid(QPainter *painter)
     }
 }
 
+void QWeather::drawCurve(QPainter *painter)
+{
+    Q_ASSERT(painter != nullptr);
+
+    QRect rect(margin, margin,
+               width() - 2 * margin, height() - 2 * margin);
+
+    int numXTicks = forecast.size();
+    int xStep = rect.width() / numXTicks;
+    double dy = rect.height() / (maxY - minY);
+    QPolygon polyline(numXTicks);
+
+    for (int i = 0; i < numXTicks; i++) {
+        int x  = rect.left() + i * xStep;
+        int y = rect.bottom() - (forecast.at(i)->temp() - minY) * dy;
+        polyline[i] = QPoint(x, y);
+    }
+
+    painter->drawPolyline(polyline);
+}
+
 void QWeather::paintEvent(QPaintEvent *event)
 {
     Q_UNUSED(event);
 
-    QRect rect(margin, 0, width(), height() - margin);
-    if (!rect.isValid())
-        return;
-
     QPainter painter(this);
     drawYGrid(&painter);
+    drawCurve(&painter);
 }
 
 double QWeather::adjustAxis(double &min, double &max, int &numTicks)
@@ -76,7 +97,7 @@ double QWeather::adjustAxis(double &min, double &max, int &numTicks)
 
     if (step * 5 < grossStep) {
       step *= 5;
-    } else if (step * 2 <= grossStep) {
+    } else if (step * 2 < grossStep) {
         step *= 2;
     }
 
