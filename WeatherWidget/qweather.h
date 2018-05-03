@@ -34,11 +34,13 @@ public:
 
     void append(WeatherItem *item);
 
+    void clear();
+
 protected:
     void paintEvent(QPaintEvent *event);
 
 private:
-    QVector< WeatherItem* > forecast;
+    QVector< WeatherItem* > mForecast;
 
     static const int margin = 25;
 

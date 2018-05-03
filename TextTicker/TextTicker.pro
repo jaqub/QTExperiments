@@ -29,3 +29,6 @@ SOURCES += \
 
 HEADERS += \
     TextTicker.h
+
+target.path = /home/pi
+INSTALLS += target

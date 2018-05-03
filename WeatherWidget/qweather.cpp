@@ -26,7 +26,7 @@ QSize QWeather::sizeHint() const
 
 void QWeather::append(WeatherItem *item)
 {
-    if (forecast.isEmpty()) {
+    if (mForecast.isEmpty()) {
         minY = item->temp();
         maxY = minY + 1;
     } else if (item->temp() > maxY) {
@@ -35,10 +35,16 @@ void QWeather::append(WeatherItem *item)
         minY = item->temp();
     }
 
-    forecast.append(item);
+    mForecast.append(item);
 
     adjustAxis(minY, maxY, numYTicks);
     update();
+}
+
+void QWeather::clear()
+{
+  qDeleteAll(mForecast);
+  mForecast.clear();
 }
 
 void QWeather::drawYGrid(QPainter *painter)
@@ -66,14 +72,14 @@ void QWeather::drawCurve(QPainter *painter)
     QRect rect(margin, margin,
                width() - 2 * margin, height() - 2 * margin);
 
-    int numXTicks = forecast.size();
+    int numXTicks = mForecast.size();
     int xStep = rect.width() / numXTicks;
     double dy = rect.height() / (maxY - minY);
     QPolygon polyline(numXTicks);
 
     for (int i = 0; i < numXTicks; i++) {
         int x  = rect.left() + i * xStep;
-        int y = rect.bottom() - (forecast.at(i)->temp() - minY) * dy;
+        int y = rect.bottom() - (mForecast.at(i)->temp() - minY) * dy;
         polyline[i] = QPoint(x, y);
     }
 
