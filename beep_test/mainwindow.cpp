@@ -8,7 +8,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , cnt(30)
+    , cnt(180)
 {
     ui->setupUi(this);
     ui->label->setText(QString::number(cnt));
@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    timer->stop();
+    enableTimer(false);
     delete timer;
     delete ui;
 }
@@ -43,17 +43,25 @@ void MainWindow::resetTimer(void)
 {
     qDebug() << "Timer reset";
     timer->start();
-    cnt = 30;
+    cnt = 180;
     ui->label->setText(QString::number(cnt));
 }
 
 void MainWindow::timeout()
 {
     cnt--;
+
+    // Make beep every 30 sec
+    if (!(cnt % 30))
+        QApplication::beep();
+
+    // Additionally make one more beep 1 sec before timeout
+    if (cnt == 1)
+        QApplication::beep();
+
     if (cnt == 0) {
         qDebug() << "Timer timeout";
-        QApplication::beep();
-        cnt = 30;
+        cnt = 180;
     }
 
     ui->label->setText(QString::number(cnt));
